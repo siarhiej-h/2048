@@ -5,7 +5,7 @@ import './index.css';
 import * as serviceWorker from './serviceWorker';
 
 render(
-  <Game />,
+  <Game fieldSize={4} />,
   document.getElementById('root')
 );
 
