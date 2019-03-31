@@ -1,193 +1,166 @@
 import React from 'react';
 import Board from './Board';
-
-function getRndInteger(min, max) {
-  return Math.floor(Math.random() * (max - min + 1) ) + min;
-}
-
-function normalize(squares, get, set) {
-  const length = squares.length;
-  let newLine = new Array(length);
-  for (let i = 0; i !== length; i++) {
-    let occupied = 0;
-    for (let j = length - 1; j >= 0; j--) {
-      let number = get(squares, i, j);
-      if (number) {
-        newLine[length - 1 - occupied++] = number;
-      }
-    }
-
-    for (let j = 0; j !== length; j++) {
-      let number = newLine[j];
-      set(squares, i, j, number);
-      newLine[j] = null;
-    }
-  }
-
-  return squares;
-}
-
-function leftGet(squares, i, j) {
-  return squares[i][squares.length - j - 1];
-}
-
-function leftSet (squares, i, j, value) {
-  squares[i][squares.length - j - 1] = value;
-};
-
-function upGet(squares, i, j) {
-  const length = squares.length;
-  return squares[length - j - 1][i];
-}
-
-function upSet(squares, i, j, value) {
-  const length = squares.length;
-  squares[length - j - 1][i] = value;
-};
-
-function rightGet(squares, i, j) {
-  return squares[i][j];
-}
-
-function rightSet(squares, i, j, value) {
-  squares[i][j] = value;
-};
-
-function downGet(squares, i, j) {
-  return squares[j][i];
-}
-
-function downSet(squares, i, j, value) {
-  squares[j][i] = value;
-};
+import { handleDown, handleLeft, handleUp, handleRight } from './move_handlers/moves';
+import { addNewNumber } from './move_handlers/nextNumber';
 
 class Game extends React.Component {
   constructor(props) {
     super(props);
 
+    let sqr = Array(4).fill().map(() => Array(4).fill(null));
+    sqr = addNewNumber(sqr);
+
     this.state = {  
-      squares: Array(4).fill().map(() => Array(4).fill(null))
+      squares: sqr,
+      moves : 0,
+      started : false
     };
 
     this.keyPressed = this.keyPressed.bind(this);
+    this.mouseDown = this.mouseDown.bind(this);
+    this.mouseUp = this.mouseUp.bind(this);
+    this.touchStart = this.touchStart.bind(this);
+    this.touchEnd = this.touchEnd.bind(this);
+
+    this.handleTouchMove = this.handleTouchMove.bind(this);
   }
 
-  keyPressed(event) {
-    const squares = this.state.squares;
-    let newSquares = squares.slice();
-    switch (event.keyCode){
-      case 37:
-        newSquares = this.handleLeft(newSquares);
-        break;
-      case 38:
-        newSquares = this.handleUp(newSquares);
-        break;
-      case 39:
-        newSquares = this.handleRight(newSquares);
-        break;
-      case 40:
-        newSquares = this.handleDown(newSquares);
-        break;
-      default:
-        newSquares = this.addNewNumber(newSquares);
-        console.log("uh oh");
-    }
-
+  mouseDown(event) {
     this.setState(() => {
-      return { squares: newSquares };
+      return { mouseX : event.clientX, mouseY : event.clientY };
     });
   }
 
-  getEmptySquaresCount(squares) {
-    let numberOfEmpty = squares.length * squares[0].length;
-    for (let i = 0; i !== squares.length; i++) {
-      const row = squares[i];
-      for (let j = 0; j !== row.length; j++) {
-        if (row[j]) {
-          numberOfEmpty--;
-        }
-      }
+  mouseUp(event) {
+    this.setState(() => {
+      return { endMouseX : event.clientX, endMouseY : event.clientY };
+    });
+    
+    let xDiff = event.clientX - this.state.mouseX;
+    let yDiff = event.clientY - this.state.mouseY;
+
+    let handler;
+    if (Math.abs(xDiff) > Math.abs(yDiff)) {
+      handler = xDiff > 0 ? handleRight : handleLeft;
     }
-    console.log(numberOfEmpty);
-    return numberOfEmpty;
-  }
-
-  addNewNumber(oldSquares) {
-    const squares = oldSquares.slice();
-    let emptyCount = this.getEmptySquaresCount(squares);
-    if (emptyCount === 0)
-      return squares;
-
-    let nextNumber = getRndInteger(0, 9) === 9 ? 4 : 2; // 10% chance for 4 to appear
-    let nextPosition = getRndInteger(0, emptyCount - 1);
-
-    for (let i = 0; i !== squares.length; i++) {
-      const row = squares[i];
-      for (let j = 0; j !== row.length; j++) {
-        if (row[j]) {
-          continue;
-        }
-
-        if (nextPosition === 0) {
-          squares[i][j] = nextNumber;
-          return squares;
-        }
-
-        nextPosition--;
-      }
+    else {
+      handler = yDiff > 0 ? handleDown : handleUp;
     }
+
+    this.handleMove(handler);
   }
 
-  /// TODO PER MATRIX AT ONCE
-  normalizeLine(length, get) {
-    let newLine = new Array(length).fill(null);
-    let occupied = 0;
-    for (let i = length - 1; i >= 0; i--) {
-      let number = get(i);
-      if (number) {
-        newLine[length - 1 - occupied++] = number;
-      }
+  touchStart(event) {
+    let touch = event.touches[0];
+    if (!touch)
+      return;
+
+    this.setState(() => {
+      return { mouseX : touch.clientX, mouseY : touch.clientY };
+    });
+  }
+
+  touchEnd(event) {
+    let touch = event.changedTouches[0];
+    if (!touch)
+      return;
+    
+    let xDiff = touch.clientX - this.state.mouseX;
+    let yDiff = touch.clientY - this.state.mouseY;
+
+    let handler;
+    if (Math.abs(xDiff) > Math.abs(yDiff)) {
+      handler = xDiff > 0 ? handleRight : handleLeft;
     }
-    return i => newLine[i];
+    else {
+      handler = yDiff > 0 ? handleDown : handleUp;
+    }
+
+    this.handleMove(handler);
   }
 
-  handleLeft(newSquares) {
-    console.log("left");
-    return normalize(newSquares, leftGet, leftSet);
+  keyPressed(event) {
+    let handler;
+    switch (event.keyCode){
+      case 37:
+        handler = s => handleLeft(s);
+        break;
+      case 38:
+        handler = s => handleUp(s);
+        break;
+      case 39:
+        handler = s => handleRight(s);
+        break;
+      case 40:
+        handler = s => handleDown(s);
+        break;
+      default:
+        handler = s => { return { moves : 0, squares : s }};
+        console.log("uh oh");
+    }
+
+    this.handleMove(handler);
   }
 
-  handleRight(newSquares) {
-    console.log("right");
-    return normalize(newSquares, rightGet, rightSet);
+  handleMove(handler) {
+    this.setState((state) => {
+      const { squares, moves, started } = handler(state.squares.slice());
+      return { squares : squares, moves : moves, started : started };
+    });
+
+    this.setState((state) => {
+      const { moves, squares } = state;
+      if (moves > 0) {
+        return { squares: addNewNumber(squares.slice()) };
+      }
+
+      return state;
+    });
   }
 
-  handleUp(newSquares) {
-    console.log("up");
-    return normalize(newSquares, upGet, upSet);
+  handleTouchMove(event) {
+    console.log(event);
+    const className = event.target.className;
+    if (className.includes('square')) {
+      event.preventDefault();;
+      return;
+    }
+    
+    this.setState(state => {
+      return { fuck : state.fuck + 1 };
+    });
   }
 
-  handleDown(newSquares) {
-    console.log("down");
-    return normalize(newSquares, downGet, downSet);
-  }
-
-  componentDidMount(){
+  componentDidMount() {
+    document.addEventListener("touchmove", this.handleTouchMove, { passive : false });
     document.addEventListener("keydown", this.keyPressed, false);
+
+    const doc = document.getElementById("game-board");
+
+    doc.addEventListener("touchstart", this.touchStart, false);
+    doc.addEventListener("touchend", this.touchEnd, false);
   }
 
   componentWillUnmount(){
+    document.removeEventListener("touchmove", this.handleTouchMove, { passive : false });
     document.removeEventListener("keydown", this.keyPressed, false);
+
+    const doc = document.getElementById("game-board");
+
+    doc.removeEventListener("touchstart", this.touchStart, false);
+    doc.removeEventListener("touchend", this.touchEnd, false);
   }
 
   render() {
     return (
-      <div className="game">
-        <div className="game-board">
+      <div className="game" id="game">
+        <div className="game-board" id="game-board">
           <Board
             squares={this.state.squares}
           />
         </div>
         <div className="game-info">
+          <span>{(this.state.started && this.state.moves === 0) ? "Nothing has moved" : null}</span>
         </div>
       </div>
     );

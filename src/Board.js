@@ -3,9 +3,10 @@ import Square from './Square';
 
 class Board extends React.Component {
   renderSquare(i, j) {
+    let item = this.props.squares[i][j];
     return (
       <Square
-        value={this.props.squares[i][j]} key={"sqr" + i + j} rowIndex={i} colIndex={j}
+        value={item} key={"sqr" + i + j} rowIndex={i} colIndex={j}
       />
     );
   }

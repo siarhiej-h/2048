@@ -7,10 +7,11 @@ ol, ul {
   padding-left: 30px;
 }
 
-.board-row:after {
+.board-row {
   clear: both;
   content: "";
-  display: table;
+  display: flex;
+  flex: 1 0 auto;
 }
 
 .status {
@@ -18,9 +19,10 @@ ol, ul {
 }
 
 .square {
-  background: #fff;
+  color: rgb(184, 185, 192);
   border: 1px solid #999;
   float: left;
+  display: flex;
   font-size: 24px;
   font-weight: bold;
   line-height: 34px;
@@ -28,23 +30,42 @@ ol, ul {
   margin-right: -1px;
   margin-top: -1px;
   padding: 0;
-  text-align: center;
+  justify-content: center;
+  align-items: center;
   width: 68px;
 }
 
-.square:focus {
-  outline: none;
+.squareOld {
+  background: rgb(180, 42, 42);
 }
 
-.kbd-navigation .square:focus {
-  background: #ddd;
+.squareNew {
+  background: rgb(245, 66, 66);
+}
+
+.squareMerged {
+  background: rgb(87, 110, 175);
 }
 
 .game {
+  touch-action: none;
   display: flex;
   flex-direction: row;
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer */
+  -khtml-user-select: none; /* KHTML browsers (e.g. Konqueror) */
+  -webkit-user-select: none; /* Chrome, Safari, and Opera */
+  -webkit-touch-callout: none; /* Disable Android and iOS callouts*/
 }
 
 .game-info {
   margin-left: 20px;
+}
+
+.game-info, .game, .square {
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer */
+    -khtml-user-select: none; /* KHTML browsers (e.g. Konqueror) */
+    -webkit-user-select: none; /* Chrome, Safari, and Opera */
+    -webkit-touch-callout: none; /* Disable Android and iOS callouts*/
 }
