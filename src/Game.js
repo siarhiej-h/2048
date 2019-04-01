@@ -10,12 +10,13 @@ class Game extends React.Component {
 
     const size = props.fieldSize;
     let sqr = Array(size).fill().map(() => Array(size).fill(null));
-    sqr = generateNewTile(sqr);
+    sqr = generateNewTile(generateNewTile(sqr));
 
     this.state = {  
       squares: sqr,
       isMoved : false,
-      isStarted : false
+      isStarted : false,
+      score : 0
     };
 
     this.keyPressed = this.keyPressed.bind(this);
@@ -46,8 +47,8 @@ class Game extends React.Component {
 
   handleMove(handler) {
     this.setState((state) => {
-      const { squares, isMoved, isStarted } = handler(state);
-      return { squares : squares, isMoved : isMoved, isStarted : isStarted };
+      const { squares, isMoved, isStarted, score } = handler(state);
+      return { squares : squares, isMoved : isMoved, isStarted : isStarted, score : score };
     });
 
     this.setState((state) => {
@@ -92,7 +93,7 @@ class Game extends React.Component {
       <div className="game" id="game">
         <div className="game-board" id="game-board">
           <Board
-            squares={this.state.squares}
+            squares={this.state.squares} score={this.state.score}
           />
         </div>
         <div className="game-info">

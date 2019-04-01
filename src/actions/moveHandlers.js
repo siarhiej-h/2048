@@ -1,12 +1,12 @@
 function processMove(state, accessors) {
     const squares = state.squares.slice();
     const length = squares.length;
-    console.log(squares);
 
     let isMoved = false;
+    let score = state.score;
 
     if (!canMove(squares, accessors)) {
-      return { squares : squares, isMoved : isMoved, isStarted : state.isStarted };
+      return { squares : squares, isMoved : isMoved, isStarted : state.isStarted, score : score };
     }
 
     const get = accessors.get;
@@ -24,6 +24,7 @@ function processMove(state, accessors) {
 
           if (row.canMerge(item)) {
             row.merge();
+            score = score + row.mergedSum;
             isMoved = true;
           }
           else {
@@ -41,7 +42,7 @@ function processMove(state, accessors) {
       }
     }
 
-    return { squares : squares, isMoved : isMoved, isStarted : true };
+    return { squares : squares, isMoved : isMoved, isStarted : true, score : score };
   }
 
   function canMove(squares, accessors) {
@@ -79,6 +80,7 @@ function processMove(state, accessors) {
       length : length,
       items : new Array(length),
       occupied : 0,
+      mergedSum : 0,
       mergedTiles : new Set()
     };
 
@@ -101,12 +103,14 @@ function processMove(state, accessors) {
 
     row.merge = function() {
       const index = row.getLastNonOccupiedIndex() + 1;
-      const item = row.items[index ];
+      const item = row.items[index];
       item.number = item.number * 2;
       item.isMerged = true;
-
       row.items[index] = item;
       row.mergedTiles.add(index);
+
+      // calculate score
+      row.mergedSum = item.number;
     }
 
     return row;
@@ -167,5 +171,5 @@ function processMove(state, accessors) {
   }
 
   export function handleNone(state) {
-    return { squares : state.squares, isMoved : false, isStarted : state.isStarted };
+    return { squares : state.squares, isMoved : false, isStarted : state.isStarted, score : state.score };
   }

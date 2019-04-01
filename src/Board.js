@@ -23,7 +23,9 @@ class Board extends React.Component {
   render() {
     return (
       <div>
-        <div className="status">ASDF</div>
+        <div className="status">
+          <span>Score: {this.props.score}</span>
+        </div>
         {this.props.squares.map((_row, rowIndex) => this.renderRow(rowIndex))}
       </div>
     );
