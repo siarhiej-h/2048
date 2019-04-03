@@ -3,8 +3,8 @@ import { handleDown, handleLeft, handleUp, handleRight, handleNone } from '../ac
 export function getTouchHandler(event, touchStartCoordinates) {
     let touch = event.changedTouches[0];
     if (!touch)
-      return handleNone;
-    
+        return handleNone;
+
     let xDiff = touch.clientX - touchStartCoordinates.X;
     let yDiff = touch.clientY - touchStartCoordinates.Y;
 
@@ -13,11 +13,11 @@ export function getTouchHandler(event, touchStartCoordinates) {
         if (xDiff > 0) {
             return handleRight;
         }
-        
+
         if (xDiff < 0) {
             return handleLeft;
         }
-    }   
+    }
     else {
 
         if (yDiff > 0) {
@@ -30,4 +30,4 @@ export function getTouchHandler(event, touchStartCoordinates) {
     }
 
     return handleNone;
-  }
+}

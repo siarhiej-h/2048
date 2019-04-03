@@ -1,13 +1,12 @@
-function processMove(state, accessors) {
-    const squares = state.squares.slice();
-    const length = squares.length;
+  function processMove(state, accessors) {
 
-    let isMoved = false;
-    let score = state.score;
-
-    if (!canMove(squares, accessors)) {
-      return { squares : squares, isMoved : isMoved, isStarted : state.isStarted, score : score };
+    if (!canMove(state.squares, accessors)) {
+      return { squares : state.squares, isMoved : false, isStarted : state.isStarted, score : state.score };
     }
+
+    const squares = state.squares.map(arr => arr.map(square => square ? square.copy() : null));
+    let score = state.score;
+    const length = squares.length;
 
     const get = accessors.get;
     const set = accessors.set;
@@ -25,13 +24,9 @@ function processMove(state, accessors) {
           if (row.canMerge(item)) {
             row.merge();
             score = score + row.mergedSum;
-            isMoved = true;
           }
           else {
             row.occupied++;
-            if (index !== j) {
-              isMoved = true;
-            }
             row.items[index] = item; 
           }
         }
@@ -42,7 +37,7 @@ function processMove(state, accessors) {
       }
     }
 
-    return { squares : squares, isMoved : isMoved, isStarted : true, score : score };
+    return { squares : squares, isMoved : true, isStarted : true, score : score };
   }
 
   function canMove(squares, accessors) {

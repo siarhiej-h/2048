@@ -1,11 +1,11 @@
 import React from 'react';
-import Square from './Square';
+import Tile from './Tile';
 
 class Board extends React.Component {
   renderSquare(i, j) {
     let item = this.props.squares[i][j];
     return (
-      <Square
+      <Tile
         value={item} key={"sqr" + i + j} rowIndex={i} colIndex={j}
       />
     );
@@ -23,9 +23,6 @@ class Board extends React.Component {
   render() {
     return (
       <div>
-        <div className="status">
-          <span>Score: {this.props.score}</span>
-        </div>
         {this.props.squares.map((_row, rowIndex) => this.renderRow(rowIndex))}
       </div>
     );

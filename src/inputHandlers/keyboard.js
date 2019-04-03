@@ -13,4 +13,4 @@ export function getKeyHandler(event) {
       default:
         return s => handleNone(s);
     }
-  }
+}

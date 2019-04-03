@@ -18,7 +18,7 @@ ol, ul {
   margin-bottom: 10px;
 }
 
-.square {
+.squareDefault, .squareOld, .squareNew, .squareMerged {
   color: rgb(184, 185, 192);
   border: 1px solid #999;
   float: left;
@@ -68,4 +68,18 @@ ol, ul {
     -khtml-user-select: none; /* KHTML browsers (e.g. Konqueror) */
     -webkit-user-select: none; /* Chrome, Safari, and Opera */
     -webkit-touch-callout: none; /* Disable Android and iOS callouts*/
+}
+
+.game-buttons {
+  display: flex;
+  flex-direction: row;
+  width: 300px;
+}
+
+.veryBoringButton {
+  width: 150px;
+  height: 40px;
+  background-color: rgb(161, 161, 161);
+  margin-left: 40px;
+  border-radius: 5px;
 }

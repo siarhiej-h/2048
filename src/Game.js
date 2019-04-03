@@ -1,5 +1,6 @@
 import React from 'react';
 import Board from './Board';
+import { getNewGameState } from './actions/getNewGameState';
 import { generateNewTile } from './actions/generateTileHandler';
 import { getKeyHandler } from './inputHandlers/keyboard';
 import { getTouchHandler } from './inputHandlers/touch';
@@ -8,17 +9,9 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
 
-    const size = props.fieldSize;
-    let sqr = Array(size).fill().map(() => Array(size).fill(null));
-    sqr = generateNewTile(generateNewTile(sqr));
-
-    this.state = {  
-      squares: sqr,
-      isMoved : false,
-      isStarted : false,
-      score : 0
-    };
-
+    this.state = getNewGameState(props.fieldSize);
+    this.rewind = this.rewind.bind(this);
+    this.reset = this.reset.bind(this);
     this.keyPressed = this.keyPressed.bind(this);
     this.touchStart = this.touchStart.bind(this);
     this.touchEnd = this.touchEnd.bind(this);
@@ -41,23 +34,51 @@ class Game extends React.Component {
   }
 
   keyPressed(event) {
+    if (event.keyCode === 81) {
+      this.rewind();
+      return;
+    }
     const handler = getKeyHandler(event);
     this.handleMove(handler);
   }
 
-  handleMove(handler) {
-    this.setState((state) => {
-      const { squares, isMoved, isStarted, score } = handler(state);
-      return { squares : squares, isMoved : isMoved, isStarted : isStarted, score : score };
+  rewind() {
+    if (this.state.history.length > 0) {
+      this.setState((state) => {
+        const { squares, score } = state.history[state.history.length - 1];
+        state.history.splice(-1, 1);
+        return { squares : squares, score : score, rewinds : state.rewinds + 1 };
+      });
+    }
+  }
+
+  reset() {
+    this.setState(() => {
+      return getNewGameState(this.props.fieldSize);
     });
+  }
 
-    this.setState((state) => {
-      const { isMoved, squares } = state;
-      if (isMoved) {
-        return { squares: generateNewTile(squares.slice()) };
-      }
+  writeHistory(state) {
+    const { squares, score } = state;
+    this.setState(() => {    
+      return { history : [...this.state.history, { squares : squares, score : score }] }
+    });
+  }
 
-      return state;
+  handleMove(handler) {
+    let { squares, isMoved, isStarted, score } = handler(this.state);
+    if (isMoved) {
+      this.writeHistory({ squares : this.state.squares, score : this.state.score });
+      squares = generateNewTile(squares);
+      this.setState(() => {
+        return { squares : squares, isMoved : isMoved, isStarted : isStarted, score : score };
+      });
+
+      return;
+    }
+
+    this.setState(() => {
+      return { isMoved : false };
     });
   }
 
@@ -92,12 +113,24 @@ class Game extends React.Component {
     return (
       <div className="game" id="game">
         <div className="game-board" id="game-board">
+          <div className="status">
+            <span>Score: {this.state.score}</span>
+          </div>
+          <div className="status">
+            {this.state.rewinds > 0 ? <span>Rewinds used: {this.state.rewinds}</span> : null}
+          </div>
+          <div className="game-info">
+            <span>{(this.state.isStarted && !this.state.isMoved) ? "Nothing has moved" : null}</span>
+          </div>
           <Board
-            squares={this.state.squares} score={this.state.score}
+            squares={this.state.squares}
           />
         </div>
-        <div className="game-info">
-          <span>{(this.state.isStarted && !this.state.isMoved) ? "Nothing has moved" : null}</span>
+        <div className="game-buttons">
+          <ul>
+            <button className="veryBoringButton" onClick={this.reset}>New game</button>
+            <button className="veryBoringButton" onClick={this.rewind}>Rewind</button>
+          </ul>
         </div>
       </div>
     );
