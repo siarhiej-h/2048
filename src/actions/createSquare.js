@@ -8,7 +8,9 @@ function copySquare(square) {
     number: square.number,
     isNew: square.isNew,
     isMerged: square.isMerged,
-    copy: () => copySquare(square),
+    copy: function() {
+      return copySquare(this);
+    },
   };
 }
 
@@ -22,7 +24,9 @@ export function CreateSquare(number) {
     number,
     isNew: true,
     isMerged: false,
-    copy: () => copySquare(square),
+    copy: function() {
+      return copySquare(this);
+    },
   };
   return square;
 }

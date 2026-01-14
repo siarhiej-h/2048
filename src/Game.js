@@ -13,30 +13,42 @@ function Game({ fieldSize }) {
     setGameState(getNewGameState(fieldSize));
   }, [fieldSize]);
 
+  // Helper function to deep copy squares
+  const deepCopySquares = useCallback((squares) => {
+    return squares.map((row) =>
+      row.map((square) => (square ? square.copy() : null))
+    );
+  }, []);
+
   const rewind = useCallback(() => {
     setGameState((prevState) => {
       if (prevState.history.length === 0) {
         return prevState;
       }
       const { squares, score } = prevState.history[prevState.history.length - 1];
+      // Deep copy squares from history to avoid mutation
+      const copiedSquares = deepCopySquares(squares);
       const newHistory = prevState.history.slice(0, -1);
       return {
         ...prevState,
-        squares,
+        squares: copiedSquares,
         score,
         rewinds: prevState.rewinds + 1,
         history: newHistory,
       };
     });
-  }, []);
+  }, [deepCopySquares]);
 
   const handleMove = useCallback((handler) => {
     setGameState((prevState) => {
       const { squares, isMoved, isStarted, score } = handler(prevState);
 
       if (isMoved) {
-        // Write history before generating new tile
-        const historyEntry = { squares: prevState.squares, score: prevState.score };
+        // Write history before generating new tile - deep copy to avoid mutation
+        const historyEntry = {
+          squares: deepCopySquares(prevState.squares),
+          score: prevState.score,
+        };
         const newSquares = generateNewTile(squares);
 
         return {
@@ -54,7 +66,7 @@ function Game({ fieldSize }) {
         isMoved: false,
       };
     });
-  }, []);
+  }, [deepCopySquares]);
 
   const keyPressed = useCallback((event) => {
     if (event.keyCode === 81) {

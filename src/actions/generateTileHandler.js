@@ -30,32 +30,35 @@ function getEmptySquaresCount(squares) {
 /**
  * Generates a new tile (2 or 4) in a random empty position
  * @param {Array<Array>} squares - 2D array representing the game board
- * @returns {Array<Array>} Updated squares array with new tile
+ * @returns {Array<Array>} Updated squares array with new tile (new array, doesn't mutate input)
  */
 export function generateNewTile(squares) {
-  const emptyCount = getEmptySquaresCount(squares);
+  // Create a deep copy to avoid mutation
+  const newSquares = squares.map((row) => row.map((square) => (square ? square.copy() : null)));
+  
+  const emptyCount = getEmptySquaresCount(newSquares);
   if (emptyCount === 0) {
-    return squares;
+    return newSquares;
   }
 
   // 10% chance for 4 to appear, 90% chance for 2
   const nextNumber = getRandomInteger(0, 9) === 9 ? 4 : 2;
   let nextPosition = getRandomInteger(0, emptyCount - 1);
 
-  for (let i = 0; i < squares.length; i++) {
-    for (let j = 0; j < squares[i].length; j++) {
-      if (squares[i][j]) {
+  for (let i = 0; i < newSquares.length; i++) {
+    for (let j = 0; j < newSquares[i].length; j++) {
+      if (newSquares[i][j]) {
         continue;
       }
 
       if (nextPosition === 0) {
-        squares[i][j] = CreateSquare(nextNumber);
-        return squares;
+        newSquares[i][j] = CreateSquare(nextNumber);
+        return newSquares;
       }
 
       nextPosition--;
     }
   }
 
-  return squares;
+  return newSquares;
 }

@@ -30,15 +30,18 @@ function processMove(state, accessors) {
     for (let j = length - 1; j >= 0; j--) {
       const item = get(squares, i, j);
       if (item) {
+        // Reset flags for the item
         item.isNew = false;
         item.isMerged = false;
 
         const index = row.getLastNonOccupiedIndex();
 
         if (row.canMerge(item)) {
-          row.merge();
+          // Merge with the last placed item
+          row.merge(item);
           score += row.mergedSum;
         } else {
+          // Place the item in the new position
           row.occupied++;
           row.items[index] = item;
         }
@@ -100,7 +103,7 @@ function canMove(squares, accessors) {
 function getRowObject(length) {
   const row = {
     length,
-    items: new Array(length),
+    items: new Array(length).fill(null),
     occupied: 0,
     mergedSum: 0,
     mergedTiles: new Set(),
@@ -113,28 +116,35 @@ function getRowObject(length) {
   row.canMerge = function (item) {
     if (row.occupied > 0) {
       const nextIndex = row.getLastNonOccupiedIndex() + 1;
+      const lastItem = row.items[nextIndex];
 
       // Already merged items can't be merged again within the same move
       if (row.mergedTiles.has(nextIndex)) {
         return false;
       }
 
-      return item.number === row.items[nextIndex].number;
+      // Can merge if numbers match
+      return lastItem && lastItem.number === item.number;
     }
 
     return false;
   };
 
-  row.merge = function () {
+  row.merge = function (incomingItem) {
     const index = row.getLastNonOccupiedIndex() + 1;
-    const item = row.items[index];
-    item.number *= 2;
-    item.isMerged = true;
-    row.items[index] = item;
+    const existingItem = row.items[index];
+    
+    // Double the number of the existing item
+    existingItem.number = existingItem.number * 2;
+    existingItem.isMerged = true;
+    row.items[index] = existingItem;
     row.mergedTiles.add(index);
 
-    // Calculate score
-    row.mergedSum = item.number;
+    // Calculate score (the new merged value)
+    row.mergedSum = existingItem.number;
+    
+    // Don't increment occupied since we're merging into existing position
+    // The incoming item is consumed in the merge
   };
 
   return row;
