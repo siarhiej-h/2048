@@ -1,9 +1,28 @@
-function copy(square) {
-    const newSquare = { number : square.number, isNew : square.isNew, isMerged : square.isMerged, copy : () => copy(newSquare) };
-    return newSquare;
+/**
+ * Creates a copy of a square object
+ * @param {Object} square - The square to copy
+ * @returns {Object} A new square object with the same properties
+ */
+function copySquare(square) {
+  return {
+    number: square.number,
+    isNew: square.isNew,
+    isMerged: square.isMerged,
+    copy: () => copySquare(square),
+  };
 }
 
+/**
+ * Creates a new square with the specified number
+ * @param {number} number - The number value for the square (typically 2 or 4)
+ * @returns {Object} A new square object
+ */
 export function CreateSquare(number) {
-    const square = { number: number, isNew: true, isMerged : false, copy : () => copy(square) };
-    return square;
+  const square = {
+    number,
+    isNew: true,
+    isMerged: false,
+    copy: () => copySquare(square),
+  };
+  return square;
 }

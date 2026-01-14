@@ -1,43 +1,61 @@
-  import { CreateSquare } from './createSquare';
+import { CreateSquare } from './createSquare';
 
-  function getRndInteger(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) ) + min;
-  }
+/**
+ * Generates a random integer between min and max (inclusive)
+ * @param {number} min - Minimum value
+ * @param {number} max - Maximum value
+ * @returns {number} Random integer
+ */
+function getRandomInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-  function getEmptySquaresCount(squares) {
-    let numberOfEmpty = squares.length * squares[0].length;
-    for (let i = 0; i !== squares.length; i++) {
-      const row = squares[i];
-      for (let j = 0; j !== row.length; j++) {
-        if (row[j]) {
-          numberOfEmpty--;
-        }
-      }
-    }
-    return numberOfEmpty;
-  }
-
-  export function generateNewTile(squares) {
-    let emptyCount = getEmptySquaresCount(squares);
-    if (emptyCount === 0)
-      return squares;
-
-    let nextNumber = getRndInteger(0, 9) === 9 ? 4 : 2; // 10% chance for 4 to appear
-    let nextPosition = getRndInteger(0, emptyCount - 1);
-
-    for (let i = 0; i !== squares.length; i++) {
-      const row = squares[i];
-      for (let j = 0; j !== row.length; j++) {
-        if (row[j]) {
-          continue;
-        }
-
-        if (nextPosition === 0) {
-          squares[i][j] = CreateSquare(nextNumber);
-          return squares;
-        }
-
-        nextPosition--;
+/**
+ * Counts the number of empty squares in the grid
+ * @param {Array<Array>} squares - 2D array representing the game board
+ * @returns {number} Number of empty squares
+ */
+function getEmptySquaresCount(squares) {
+  let emptyCount = 0;
+  for (let i = 0; i < squares.length; i++) {
+    for (let j = 0; j < squares[i].length; j++) {
+      if (!squares[i][j]) {
+        emptyCount++;
       }
     }
   }
+  return emptyCount;
+}
+
+/**
+ * Generates a new tile (2 or 4) in a random empty position
+ * @param {Array<Array>} squares - 2D array representing the game board
+ * @returns {Array<Array>} Updated squares array with new tile
+ */
+export function generateNewTile(squares) {
+  const emptyCount = getEmptySquaresCount(squares);
+  if (emptyCount === 0) {
+    return squares;
+  }
+
+  // 10% chance for 4 to appear, 90% chance for 2
+  const nextNumber = getRandomInteger(0, 9) === 9 ? 4 : 2;
+  let nextPosition = getRandomInteger(0, emptyCount - 1);
+
+  for (let i = 0; i < squares.length; i++) {
+    for (let j = 0; j < squares[i].length; j++) {
+      if (squares[i][j]) {
+        continue;
+      }
+
+      if (nextPosition === 0) {
+        squares[i][j] = CreateSquare(nextNumber);
+        return squares;
+      }
+
+      nextPosition--;
+    }
+  }
+
+  return squares;
+}

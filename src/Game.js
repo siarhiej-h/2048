@@ -1,140 +1,153 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Board from './Board';
 import { getNewGameState } from './actions/getNewGameState';
 import { generateNewTile } from './actions/generateTileHandler';
 import { getKeyHandler } from './inputHandlers/keyboard';
 import { getTouchHandler } from './inputHandlers/touch';
 
-class Game extends React.Component {
-  constructor(props) {
-    super(props);
+function Game({ fieldSize }) {
+  const [gameState, setGameState] = useState(() => getNewGameState(fieldSize));
+  const [touchStart, setTouchStart] = useState(null);
 
-    this.state = getNewGameState(props.fieldSize);
-    this.rewind = this.rewind.bind(this);
-    this.reset = this.reset.bind(this);
-    this.keyPressed = this.keyPressed.bind(this);
-    this.touchStart = this.touchStart.bind(this);
-    this.touchEnd = this.touchEnd.bind(this);
-    this.handleTouchMove = this.handleTouchMove.bind(this);
-  }
+  const reset = useCallback(() => {
+    setGameState(getNewGameState(fieldSize));
+  }, [fieldSize]);
 
-  touchStart(event) {
-    let touch = event.touches[0];
-    if (!touch)
-      return;
-
-    this.setState(() => {
-      return { touch : { X : touch.clientX, Y : touch.clientY }};
+  const rewind = useCallback(() => {
+    setGameState((prevState) => {
+      if (prevState.history.length === 0) {
+        return prevState;
+      }
+      const { squares, score } = prevState.history[prevState.history.length - 1];
+      const newHistory = prevState.history.slice(0, -1);
+      return {
+        ...prevState,
+        squares,
+        score,
+        rewinds: prevState.rewinds + 1,
+        history: newHistory,
+      };
     });
-  }
+  }, []);
 
-  touchEnd(event) {
-    const handler = getTouchHandler(event, this.state.touch);
-    this.handleMove(handler);
-  }
+  const handleMove = useCallback((handler) => {
+    setGameState((prevState) => {
+      const { squares, isMoved, isStarted, score } = handler(prevState);
+      
+      if (isMoved) {
+        // Write history before generating new tile
+        const historyEntry = { squares: prevState.squares, score: prevState.score };
+        const newSquares = generateNewTile(squares);
+        
+        return {
+          ...prevState,
+          squares: newSquares,
+          isMoved: true,
+          isStarted: true,
+          score,
+          history: [...prevState.history, historyEntry],
+        };
+      }
+      
+      return {
+        ...prevState,
+        isMoved: false,
+      };
+    });
+  }, []);
 
-  keyPressed(event) {
+  const keyPressed = useCallback((event) => {
     if (event.keyCode === 81) {
-      this.rewind();
+      rewind();
       return;
     }
     const handler = getKeyHandler(event);
-    this.handleMove(handler);
-  }
+    handleMove(handler);
+  }, [rewind, handleMove]);
 
-  rewind() {
-    if (this.state.history.length > 0) {
-      this.setState((state) => {
-        const { squares, score } = state.history[state.history.length - 1];
-        state.history.splice(-1, 1);
-        return { squares : squares, score : score, rewinds : state.rewinds + 1 };
-      });
+  const handleTouchStart = useCallback((event) => {
+    const touch = event.touches[0];
+    if (touch) {
+      setTouchStart({ x: touch.clientX, y: touch.clientY });
     }
-  }
+  }, []);
 
-  reset() {
-    this.setState(() => {
-      return getNewGameState(this.props.fieldSize);
-    });
-  }
+  const handleTouchEnd = useCallback((event) => {
+    if (!touchStart) return;
+    
+    const handler = getTouchHandler(event, touchStart);
+    handleMove(handler);
+    setTouchStart(null);
+  }, [touchStart, handleMove]);
 
-  writeHistory(state) {
-    const { squares, score } = state;
-    this.setState(() => {    
-      return { history : [...this.state.history, { squares : squares, score : score }] }
-    });
-  }
-
-  handleMove(handler) {
-    let { squares, isMoved, isStarted, score } = handler(this.state);
-    if (isMoved) {
-      this.writeHistory({ squares : this.state.squares, score : this.state.score });
-      squares = generateNewTile(squares);
-      this.setState(() => {
-        return { squares : squares, isMoved : isMoved, isStarted : isStarted, score : score };
-      });
-
-      return;
-    }
-
-    this.setState(() => {
-      return { isMoved : false };
-    });
-  }
-
-  // just a hack for iOS bouncing effect
-  handleTouchMove(event) {
+  const handleTouchMove = useCallback((event) => {
+    // Prevent iOS bouncing effect
     const className = event.target.className;
-    if (className.includes('square')) {
-      event.preventDefault();;
-      return;
+    if (typeof className === 'string' && className.includes('square')) {
+      event.preventDefault();
     }
-  }
+  }, []);
 
-  componentDidMount() {
-    document.addEventListener("touchmove", this.handleTouchMove, { passive : false });
-    document.addEventListener("keydown", this.keyPressed, false);
+  useEffect(() => {
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('keydown', keyPressed, false);
 
-    const doc = document.getElementById("game-board");
-    doc.addEventListener("touchstart", this.touchStart, false);
-    doc.addEventListener("touchend", this.touchEnd, false);
-  }
+    const gameBoard = document.getElementById('game-board');
+    if (gameBoard) {
+      gameBoard.addEventListener('touchstart', handleTouchStart, false);
+      gameBoard.addEventListener('touchend', handleTouchEnd, false);
+    }
 
-  componentWillUnmount(){
-    document.removeEventListener("touchmove", this.handleTouchMove, { passive : false });
-    document.removeEventListener("keydown", this.keyPressed, false);
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMove, { passive: false });
+      document.removeEventListener('keydown', keyPressed, false);
+      
+      const gameBoard = document.getElementById('game-board');
+      if (gameBoard) {
+        gameBoard.removeEventListener('touchstart', handleTouchStart, false);
+        gameBoard.removeEventListener('touchend', handleTouchEnd, false);
+      }
+    };
+  }, [handleTouchMove, keyPressed, handleTouchStart, handleTouchEnd]);
 
-    const doc = document.getElementById("game-board");
-    doc.removeEventListener("touchstart", this.touchStart, false);
-    doc.removeEventListener("touchend", this.touchEnd, false);
-  }
-
-  render() {
-    return (
-      <div className="game" id="game">
-        <div className="game-board" id="game-board">
-          <div className="status">
-            <span>Score: {this.state.score}</span>
+  return (
+    <div className="game" id="game">
+      <div className="game-board" id="game-board">
+        <div className="game-header">
+          <h1 className="game-title">2048</h1>
+          <div className="score-container">
+            <div className="score-box">
+              <div className="score-label">Score</div>
+              <div className="score-value">{gameState.score}</div>
+            </div>
+            {gameState.rewinds > 0 && (
+              <div className="score-box rewinds-box">
+                <div className="score-label">Rewinds</div>
+                <div className="score-value">{gameState.rewinds}</div>
+              </div>
+            )}
           </div>
-          <div className="status">
-            {this.state.rewinds > 0 ? <span>Rewinds used: {this.state.rewinds}</span> : null}
-          </div>
-          <div className="game-info">
-            <span>{(this.state.isStarted && !this.state.isMoved) ? "Nothing has moved" : null}</span>
-          </div>
-          <Board
-            squares={this.state.squares}
-          />
         </div>
+        
+        {gameState.isStarted && !gameState.isMoved && (
+          <div className="game-message">
+            <span>Nothing has moved</span>
+          </div>
+        )}
+        
+        <Board squares={gameState.squares} />
+        
         <div className="game-buttons">
-          <ul>
-            <button className="veryBoringButton" onClick={this.reset}>New game</button>
-            <button className="veryBoringButton" onClick={this.rewind}>Rewind</button>
-          </ul>
+          <button className="game-button" onClick={reset}>
+            New Game
+          </button>
+          <button className="game-button" onClick={rewind}>
+            Rewind
+          </button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default Game;

@@ -1,11 +1,19 @@
 import React from 'react';
 
-function Tile(props) {
-  let item = props.value;
-  let number = item ? item.number : null;
-  let className = item ? (item.isNew ? "squareNew" : (item.isMerged ? "squareMerged" : "squareOld")) : "squareDefault";
+function Tile({ value, rowIndex, colIndex }) {
+  if (!value) {
+    return <span className="tile tile-empty" />;
+  }
+
+  const { number, isNew, isMerged } = value;
+  const tileClass = `tile tile-${number} ${isNew ? 'tile-new' : ''} ${isMerged ? 'tile-merged' : ''}`;
+
   return (
-    <span className={className}>
+    <span
+      className={tileClass}
+      data-row={rowIndex}
+      data-col={colIndex}
+    >
       {number}
     </span>
   );

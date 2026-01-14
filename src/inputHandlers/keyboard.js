@@ -1,16 +1,29 @@
-import { handleDown, handleLeft, handleUp, handleRight, handleNone } from '../actions/moveHandlers';
+import {
+  handleDown,
+  handleLeft,
+  handleUp,
+  handleRight,
+  handleNone,
+} from '../actions/moveHandlers';
 
+/**
+ * Maps keyboard key codes to move handlers
+ * @param {KeyboardEvent} event - The keyboard event
+ * @returns {Function} A handler function that processes the move
+ */
 export function getKeyHandler(event) {
-    switch (event.keyCode) {
-      case 37:
-        return s => handleLeft(s);
-      case 38:
-        return s => handleUp(s);
-      case 39:
-        return s => handleRight(s);
-      case 40:
-        return s => handleDown(s);
-      default:
-        return s => handleNone(s);
-    }
+  const keyCode = event.keyCode || event.which;
+  
+  switch (keyCode) {
+    case 37: // Left arrow
+      return (state) => handleLeft(state);
+    case 38: // Up arrow
+      return (state) => handleUp(state);
+    case 39: // Right arrow
+      return (state) => handleRight(state);
+    case 40: // Down arrow
+      return (state) => handleDown(state);
+    default:
+      return (state) => handleNone(state);
+  }
 }

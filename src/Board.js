@@ -1,32 +1,33 @@
 import React from 'react';
 import Tile from './Tile';
 
-class Board extends React.Component {
-  renderSquare(i, j) {
-    let item = this.props.squares[i][j];
+function Board({ squares }) {
+  const renderSquare = (rowIndex, colIndex) => {
+    const item = squares[rowIndex][colIndex];
     return (
       <Tile
-        value={item} key={"sqr" + i + j} rowIndex={i} colIndex={j}
+        key={`tile-${rowIndex}-${colIndex}-${item?.number || 'empty'}`}
+        value={item}
+        rowIndex={rowIndex}
+        colIndex={colIndex}
       />
     );
-  }
+  };
 
-  renderRow(rowIndex) {
-    const row = this.props.squares[rowIndex];
+  const renderRow = (rowIndex) => {
+    const row = squares[rowIndex];
     return (
-      <div className="board-row" key={"br" + rowIndex}>{
-        row.map((_col, colIndex) => this.renderSquare(rowIndex, colIndex))
-      }</div>
-    );
-  }
-
-  render() {
-    return (
-      <div>
-        {this.props.squares.map((_row, rowIndex) => this.renderRow(rowIndex))}
+      <div className="board-row" key={`row-${rowIndex}`}>
+        {row.map((_col, colIndex) => renderSquare(rowIndex, colIndex))}
       </div>
     );
-  }
+  };
+
+  return (
+    <div className="board">
+      {squares.map((_row, rowIndex) => renderRow(rowIndex))}
+    </div>
+  );
 }
 
 export default Board;
