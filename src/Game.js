@@ -33,22 +33,22 @@ function Game({ fieldSize }) {
   const handleMove = useCallback((handler) => {
     setGameState((prevState) => {
       const { squares, isMoved, isStarted, score } = handler(prevState);
-      
+
       if (isMoved) {
         // Write history before generating new tile
         const historyEntry = { squares: prevState.squares, score: prevState.score };
         const newSquares = generateNewTile(squares);
-        
+
         return {
           ...prevState,
           squares: newSquares,
           isMoved: true,
-          isStarted: true,
+          isStarted,
           score,
           history: [...prevState.history, historyEntry],
         };
       }
-      
+
       return {
         ...prevState,
         isMoved: false,
@@ -74,7 +74,7 @@ function Game({ fieldSize }) {
 
   const handleTouchEnd = useCallback((event) => {
     if (!touchStart) return;
-    
+
     const handler = getTouchHandler(event, touchStart);
     handleMove(handler);
     setTouchStart(null);
@@ -101,7 +101,7 @@ function Game({ fieldSize }) {
     return () => {
       document.removeEventListener('touchmove', handleTouchMove, { passive: false });
       document.removeEventListener('keydown', keyPressed, false);
-      
+
       const gameBoard = document.getElementById('game-board');
       if (gameBoard) {
         gameBoard.removeEventListener('touchstart', handleTouchStart, false);
@@ -128,15 +128,15 @@ function Game({ fieldSize }) {
             )}
           </div>
         </div>
-        
+
         {gameState.isStarted && !gameState.isMoved && (
           <div className="game-message">
             <span>Nothing has moved</span>
           </div>
         )}
-        
+
         <Board squares={gameState.squares} />
-        
+
         <div className="game-buttons">
           <button className="game-button" onClick={reset}>
             New Game
